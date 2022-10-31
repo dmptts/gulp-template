@@ -1,0 +1,23 @@
+@mixin retina {
+  @media (min-resolution: $retina-dpi), (min-resolution: $retina-dppx) {
+    @content;
+  }
+}
+
+@mixin viewport-1024 {
+  @media (max-width: $viewport-1440 - 1) {
+    @content;
+  }
+}
+
+@mixin viewport-768 {
+  @media (max-width: $viewport-1024 - 1) {
+    @content;
+  }
+}
+
+@mixin viewport-360 {
+  @media (max-width: $viewport-768 - 1) {
+    @content;
+  }
+}
