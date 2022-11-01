@@ -1,6 +1,6 @@
 import gulp from 'gulp';
 import fileinclude from 'gulp-file-include';
-import { deleteAsync } from 'del';
+import deleteAsync from 'del';
 import gulpPlumber from 'gulp-plumber';
 import browserSync from 'browser-sync';
 import dartSass from 'sass';
@@ -69,6 +69,22 @@ const js = () => {
         minimize: isDev,
       },
       devtool: isDev ? 'source-map' : false,
+      module: {
+        rules: [{
+          test: /\.m?js$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              presets: [
+                ['@babel/preset-env', {
+                  targets: "defaults"
+                }]
+              ]
+            }
+          }
+        }]
+      },
     }))
     .pipe(gulp.dest('./dist/js/'))
     .pipe(browserSync.stream());
