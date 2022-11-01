@@ -1,0 +1,5 @@
+build/*.js
+source/js/vendor/*.js
+gulpfile.js
+webpack.config.js
+.eslintrc.cjs
