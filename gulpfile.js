@@ -7,6 +7,16 @@ const autoprefixer = require('autoprefixer');
 const csso = require('gulp-csso');
 const rename = require('gulp-rename');
 const gcmq = require('gulp-group-css-media-queries');
+const pug = require('gulp-pug');
+const cached = require('gulp-cached');
+
+const compilePug = () => {
+  return src('src/pug/pages/*.pug')
+    .pipe(plumber())
+    .pipe(pug({ pretty: true }))
+    .pipe(cached('pug'))
+    .pipe(dest('build'));
+};
 
 const styles = () => {
   return src('src/scss/style.scss')
@@ -29,3 +39,4 @@ const styles = () => {
 };
 
 exports.styles = styles;
+exports.compilePug = compilePug;
