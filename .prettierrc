@@ -1,0 +1,12 @@
+{
+  "singleQuote": true,
+  "order": "smacss",
+  "overrides": [
+    {
+      "files": ["**/*.css", "**/*.scss", "**/*.html"],
+      "options": {
+        "singleQuote": false
+      }
+    }
+  ]
+}

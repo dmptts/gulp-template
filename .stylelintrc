@@ -1,0 +1,11 @@
+{
+  "extends": ["stylelint-config-standard", "stylelint-config-standard-scss"],
+  "plugins": ["stylelint-scss", "stylelint-prettier"],
+  "rules": {
+    "prettier/prettier": true,
+    "declaration-empty-line-before": null,
+    "color-function-notation": "legacy",
+    "alpha-value-notation": "number",
+    "value-keyword-case": ["lower", { "camelCaseSvgKeywords": true }]
+  }
+}
