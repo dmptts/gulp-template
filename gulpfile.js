@@ -1,53 +1,75 @@
 import gulp from 'gulp';
-import plumber from 'gulp-plumber';
-import sourcemap from 'gulp-sourcemaps';
-import dartSass from 'sass';
-import gulpSass from 'gulp-sass';
-import postcss from 'gulp-postcss';
-import autoprefixer from 'autoprefixer';
-import csso from 'gulp-csso';
-import rename from 'gulp-rename';
-import gcmq from 'gulp-group-css-media-queries';
-import pug from 'gulp-pug';
-import cached from 'gulp-cached';
-import webpackStream from 'webpack-stream';
-import webpackConfig from './webpack.config.cjs';
+import browserSync from 'browser-sync';
+import { deleteAsync } from 'del';
+import { compileStyles } from './gulp/compileStyles.js';
+import { copy, copyImages, copySvg } from './gulp/copyAssets.js';
+import { compileScripts } from './gulp/compileScripts.js';
+import {
+  optimizeSvg,
+  sprite,
+  createWebp,
+  optimizePng,
+  optimizeJpg,
+} from './gulp/optimizeImages.js';
+import { compilePug } from './gulp/compilePug.js';
 
-export const compilePug = () => {
-  return gulp
-    .src('src/pug/pages/*.pug')
-    .pipe(plumber())
-    .pipe(pug({ pretty: true }))
-    .pipe(cached('pug'))
-    .pipe(gulp.dest('build'));
+const server = browserSync.create();
+const streamStyles = () => compileStyles().pipe(server.stream());
+const clean = () => deleteAsync('build');
+const refresh = (done) => {
+  server.reload();
+  done();
 };
 
-const sass = gulpSass(dartSass);
+const syncServer = () => {
+  server.init({
+    server: 'build/',
+    index: 'sitemap.html',
+    notify: false,
+    open: true,
+    cors: true,
+    ui: false,
+  });
 
-export const styles = () => {
-  return gulp
-    .src('src/scss/style.scss')
-    .pipe(plumber())
-    .pipe(sourcemap.init())
-    .pipe(sass())
-    .pipe(
-      postcss([
-        autoprefixer({
-          grid: true,
-        }),
-      ])
-    )
-    .pipe(gcmq()) // выключить, если в проект импортятся шрифты через ссылку на внешний источник
-    .pipe(gulp.dest('build/css'))
-    .pipe(csso())
-    .pipe(rename('style.min.css'))
-    .pipe(sourcemap.write('.'))
-    .pipe(gulp.dest('build/css'));
+  gulp.watch('source/pug/**/*.pug', gulp.series(compilePug, refresh));
+  gulp.watch('source/sass/**/*.{scss,sass}', streamStyles);
+  gulp.watch('source/js/**/*.{js,json}', gulp.series(compileScripts, refresh));
+  gulp.watch('source/data/**/*.{js,json}', gulp.series(copy, refresh));
+  gulp.watch(
+    'source/img/**/*.svg',
+    gulp.series(copySvg, sprite, compilePug, refresh)
+  );
+  gulp.watch(
+    'source/img/**/*.{png,jpg,webp}',
+    gulp.series(copyImages, compilePug, refresh)
+  );
+
+  gulp.watch('source/favicon/**', gulp.series(copy, refresh));
+  gulp.watch('source/video/**', gulp.series(copy, refresh));
+  gulp.watch('source/downloads/**', gulp.series(copy, refresh));
+  gulp.watch('source/*.php', gulp.series(copy, refresh));
 };
 
-export const scripts = () => {
-  return gulp
-    .src(['src/js/index.js'])
-    .pipe(webpackStream(webpackConfig))
-    .pipe(gulp.dest('build/js'));
-};
+const build = gulp.series(
+  clean,
+  copy,
+  sprite,
+  gulp.parallel(
+    compileStyles,
+    compileScripts,
+    compilePug,
+    optimizePng,
+    optimizeJpg,
+    optimizeSvg
+  )
+);
+
+const start = gulp.series(
+  clean,
+  copy,
+  sprite,
+  gulp.parallel(compileStyles, compileScripts, compilePug),
+  syncServer
+);
+
+export { createWebp as webp, build, start };
